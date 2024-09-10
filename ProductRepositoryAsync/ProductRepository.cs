@@ -16,27 +16,231 @@ public class ProductRepository : IProductRepository
         this.database = database;
     }
 
-    public int AddProduct(Product product)
+    public async Task<int> AddProductAsync(Product product)
     {
-        // TODO Implement the method to add a product to the repository.
-        throw new NotImplementedException();
+        if (product.UnitPrice < 0 || product.UnitsInStock < 0 || string.IsNullOrWhiteSpace(product.Name) || string.IsNullOrWhiteSpace(product.Category))
+        {
+            throw new ArgumentException("lajd", nameof(product), null);
+        }
+
+        OperationResult result = await this.database.IsCollectionExistAsync(this.productCollectionName, out bool collectionExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionExists)
+        {
+            result = await this.database.CreateCollectionAsync(this.productCollectionName);
+
+            if (result == OperationResult.ConnectionIssue)
+            {
+                throw new DatabaseConnectionException();
+            }
+            else if (result != OperationResult.Success)
+            {
+                throw new RepositoryException();
+            }
+        }
+
+        result = await this.database.GenerateIdAsync(this.productCollectionName, out int id);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        var data = new Dictionary<string, string>
+        {
+            ["name"] = product.Name,
+            ["category"] = product.Category,
+            ["price"] = product.UnitPrice.ToString(CultureInfo.InvariantCulture),
+            ["in-stock"] = product.UnitsInStock.ToString(CultureInfo.InvariantCulture),
+            ["discontinued"] = product.Discontinued.ToString(CultureInfo.InvariantCulture),
+        };
+
+        result = await this.database.InsertCollectionElementAsync(this.productCollectionName, id, data);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        return id;
     }
 
-    public Product GetProduct(int productId)
+    public async Task<Product> GetProductAsync(int productId)
     {
-        // TODO Implement the method to get a product from the repository.
-        throw new NotImplementedException();
+        OperationResult result = await this.database.IsCollectionExistAsync(this.productCollectionName, out bool collectionExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionExists)
+        {
+            throw new CollectionNotFoundException();
+        }
+
+        result = await this.database.IsCollectionElementExistAsync(this.productCollectionName, productId, out bool collectionElementExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionElementExists)
+        {
+            throw new ProductNotFoundException();
+        }
+
+        result = await this.database.GetCollectionElementAsync(this.productCollectionName, productId, out IDictionary<string, string> data);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        return new Product
+        {
+            Id = productId,
+            Name = data["name"],
+            Category = data["category"],
+            UnitPrice = decimal.Parse(data["price"], CultureInfo.InvariantCulture),
+            UnitsInStock = int.Parse(data["in-stock"], CultureInfo.InvariantCulture),
+            Discontinued = bool.Parse(data["discontinued"]),
+        };
     }
 
-    public void RemoveProduct(int productId)
+    public async Task RemoveProductAsync(int productId)
     {
-        // TODO Implement the method to remove a product from the repository.
-        throw new NotImplementedException();
+        OperationResult result = await this.database.IsCollectionExistAsync(this.productCollectionName, out bool collectionExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionExists)
+        {
+            throw new CollectionNotFoundException();
+        }
+
+        result = await this.database.IsCollectionElementExistAsync(this.productCollectionName, productId, out bool collectionElementExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionElementExists)
+        {
+            throw new ProductNotFoundException();
+        }
+
+        result = await this.database.DeleteCollectionElementAsync(this.productCollectionName, productId);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
     }
 
-    public void UpdateProduct(Product product)
+    public async Task UpdateProductAsync(Product product)
     {
-        // TODO Implement the method to update a product int the repository.
-        throw new NotImplementedException();
+        if (product.UnitPrice < 0 || product.UnitsInStock < 0 || string.IsNullOrWhiteSpace(product.Name) || string.IsNullOrWhiteSpace(product.Category))
+        {
+            throw new ArgumentException("lajd", nameof(product), null);
+        }
+
+        OperationResult result = await this.database.IsCollectionExistAsync(this.productCollectionName, out bool collectionExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionExists)
+        {
+            throw new CollectionNotFoundException();
+        }
+
+        result = await this.database.IsCollectionElementExistAsync(this.productCollectionName, product.Id, out bool collectionElementExists);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
+
+        if (!collectionElementExists)
+        {
+            throw new ProductNotFoundException();
+        }
+
+        var data = new Dictionary<string, string>
+        {
+            ["name"] = product.Name,
+            ["category"] = product.Category,
+            ["price"] = product.UnitPrice.ToString(CultureInfo.InvariantCulture),
+            ["in-stock"] = product.UnitsInStock.ToString(CultureInfo.InvariantCulture),
+            ["discontinued"] = product.Discontinued.ToString(CultureInfo.InvariantCulture),
+        };
+
+        result = await this.database.UpdateCollectionElementAsync(this.productCollectionName, product.Id, data);
+
+        if (result == OperationResult.ConnectionIssue)
+        {
+            throw new DatabaseConnectionException();
+        }
+        else if (result != OperationResult.Success)
+        {
+            throw new RepositoryException();
+        }
     }
 }
