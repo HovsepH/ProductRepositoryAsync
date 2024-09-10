@@ -1,5 +1,7 @@
 namespace ProductRepositoryAsync;
+
 #pragma warning disable S3925
+
 /// <summary>
 /// The exception is thrown when there is an invalid attempt to find a product.
 /// </summary>

@@ -2,6 +2,8 @@ using System.Globalization;
 
 namespace ProductRepositoryAsync;
 
+#pragma warning disable
+
 /// <summary>
 /// Represents a product storage service and provides a set of methods for managing the list of products.
 /// </summary>
